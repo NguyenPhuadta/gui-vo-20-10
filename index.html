@@ -158,6 +158,22 @@
       .digit{width:calc((100% - 5px)/2);height:clamp(56px,18svh,74px);font-size:clamp(30px,4.7vw,40px);border-radius:13px}
       .time-unit,.time-unit.minutes,.time-unit.seconds{width:auto;font-size:clamp(20px,3.4vw,28px)}
     }
+
+    /* Bìa và trang trong theo Figma 1463:531, 1463:565. */
+    .cover-title{top:-24px;right:20px;padding:0 20px 16px 32px;font-size:var(--title-size,200px);letter-spacing:-6px}
+    .cover-date{top:610px;bottom:auto;left:8px;padding:0 20px 16px 16px;font-size:var(--date-size,150px);letter-spacing:-4.5px}
+    .letter .author{top:679px}
+
+    @media(min-width:1000px){
+      .editing-cover .card-screen{width:calc(100% - 320px)}
+    }
+    @media(max-width:999px){
+      .editing-cover .layout-controls{top:auto;bottom:12px;left:12px;right:12px;width:auto;max-height:38svh}
+      .editing-cover .layout-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      .editing-cover .layout-controls fieldset{min-width:0}
+      .editing-cover .card-screen{height:60svh;min-height:0;padding:12px 0 20px}
+      .editing-cover .hint{display:none}
+    }
   </style>
 </head>
 <body>
@@ -177,33 +193,213 @@
       </div>
     </section>
 
+    <section class="screen card-screen" id="card" aria-label="Thiệp gửi vợ yêu" hidden>
+      <div class="book-space">
+        <div class="book"><div class="book-position">
+          <article class="page letter" id="letter" aria-label="Lời nhắn gửi vợ yêu" aria-hidden="true" inert>
+            <div class="letter-copy">
+              <p>Hi bbi xinh của tui, lại một dịp nữa để được vọc vạch tí nghề gửi tặng người yêu chút quà nhỏ. Mong là vk iu thấy a tiến bộ qua từng món quà. Cũng mong là sớm đến ngày giàu giàu để tặng ngiu nhìu quà vật chất hơn hehehe!!!</p>
+              <p>Hôm nay nhân dịp ngày 20/10, …hmm thực ra chúc thì hơi nhìu rùi nhỉ. Riêng lần này anh chuyển sang concept cảm ơn nhé! Cảm ơn vợ iu cụa anh vì đã luôn là chính mình, luôn là một em bé kiên cường trước mọi khó khăn dù trong công việc hay cuộc sống. Nhìn em như z anh cũng yên tâm hơn phần nào. Mong em hãy giữ mãi những phẩm chất đó, những điều cốt lõi làm nên một Ngân Hà mà mọi người yêu thương và trân trọng. Với anh em luôn là cô gái hiền lành, xinh xắn, tốt bụng và đáng yêu nhất. Không cần phải so sánh với hay trở thành bất cứ ai khác cả</p>
+              <p>Em bé xứng đáng với mọi bông hoa thược dược xinh nhất, mọi trang sức lấp lánh nhất trên đời. Đừng bao giờ hoài nghi về giá trị của mình nha. Chúc em ngày nào cũng là 20/10. Anh yêu em!!!</p>
+            </div>
+            <img class="signature" src="assets/signature.svg" alt="Chữ ký của Phú">
+            <p class="author">Nguyễn Hồng Phú</p>
+          </article>
+          <div class="flipper">
+            <button class="page cover" id="open-card" aria-label="Em chạm vào đây để mở thiệp" aria-controls="letter" aria-expanded="false">
+              <span class="cover-title gradient">gửi Vợ</span>
+              <span class="cover-date gradient">20’10</span>
+              <span class="cover-halo" aria-hidden="true"><img src="assets/cover-halo.svg" alt=""></span>
+              <span class="cover-flower" aria-hidden="true"><span class="cover-flower-art"><img src="assets/cover-flower.png" alt=""></span></span>
+            </button>
+            <div class="page photo-page" id="photo-page" aria-hidden="true">
+              <img class="mother-photo" src="assets/photo.png" alt="Mẹ Hiền trong bức ảnh màu film con làm tặng mẹ">
+              <img class="handwriting" src="assets/handwriting.png" alt="Tặng mẹ Hiền một bức ảnh với màu film do app con tự làm">
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <p class="hint">Em chạm vào thiệp để mở nhé</p>
+      <button class="close-card" id="close-card" type="button" aria-label="Gấp thiệp lại" hidden>Gấp thiệp lại</button>
+    </section>
     <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
   </main>
 
+  <script type="application/json" id="cover-layout">{"title":{"x":23,"y":-37,"size":221},"date":{"x":-24,"y":35,"size":150}}</script>
   <script>
     (() => {
       'use strict';
+      // 18:30 ngày 20/10/2026 tại Việt Nam. Múi giờ cố định để em mở ở đâu cũng đúng giờ.
       const opensAt = new Date('2026-10-20T18:30:00+07:00').getTime();
-      const startsAt = opensAt - 24 * 60 * 60 * 1000;
+      // Hoa lên màu trong 24 giờ trước lúc mở quà, cùng một tiến độ trên mọi thiết bị.
+      const colorStartsAt = opensAt - 24 * 60 * 60 * 1000;
       const flower = document.querySelector('.countdown-flower');
+      const countdown = document.getElementById('countdown');
+      const card = document.getElementById('card');
+      const openButton = document.getElementById('open-card');
+      const closeButton = document.getElementById('close-card');
+      const letter = document.getElementById('letter');
+      const photo = document.getElementById('photo-page');
       const digits = Array.from(document.querySelectorAll('.digit'));
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      // Chỉ dùng để kiểm tra thiết kế; URL gửi vợ không cần tham số nào.
+      const preview = new URLSearchParams(location.search).get('preview');
+      const editing = new URLSearchParams(location.search).get('edit') === '1';
+      let revealed = false;
+      let interval;
+      let focusTimer;
+
       function resize() {
-        document.documentElement.style.setProperty('--countdown-scale', Math.min(innerWidth / 1920, innerHeight / 1080));
+        const w = window.innerWidth, h = window.innerHeight;
+        document.documentElement.style.setProperty('--countdown-scale', Math.min(w / 1920, h / 1080));
+        const editorHeight = w < 1000 ? h * .6 - 40 : h - 140;
+        document.documentElement.style.setProperty('--book-scale', editing ? Math.min((w - (w >= 1000 ? 360 : 40)) / 591, editorHeight / 797, 1) : Math.min((w - 80) / 1182, (h - 140) / 797, 1));
+        document.documentElement.style.setProperty('--mobile-scale', Math.min((w - 40) / 591, (editing ? editorHeight : h - 120) / 797, 1));
       }
+
+      function setOpen(isOpen) {
+        clearTimeout(focusTimer);
+        card.classList.toggle('is-open', isOpen);
+        openButton.setAttribute('aria-expanded', String(isOpen));
+        openButton.tabIndex = isOpen ? -1 : 0;
+        openButton.setAttribute('aria-hidden', String(isOpen));
+        letter.setAttribute('aria-hidden', String(!isOpen));
+        letter.inert = !isOpen;
+        photo.setAttribute('aria-hidden', String(!isOpen));
+        closeButton.hidden = !isOpen;
+        if (isOpen) {
+          document.getElementById('announcement').textContent = 'Thiệp đã mở. Anh yêu em!!!';
+          focusTimer = setTimeout(() => closeButton.focus({preventScroll:true}), reducedMotion.matches ? 0 : 1850);
+        } else {
+          window.scrollTo({top:0, behavior:'instant'});
+          openButton.focus({preventScroll:true});
+        }
+      }
+
+      function reveal(animate) {
+        if (revealed) return;
+        revealed = true;
+        clearInterval(interval);
+        const show = () => {
+          countdown.hidden = true;
+          card.hidden = false;
+          document.getElementById('announcement').textContent = 'Đã đến giờ mở quà. Em chạm vào thiệp để mở nhé!';
+          if (preview === 'open' && !editing) setOpen(true);
+        };
+        if (animate && !reducedMotion.matches) {
+          countdown.classList.add('leaving');
+          setTimeout(show, 850);
+        } else show();
+      }
+
       function tick() {
         const now = Date.now();
-        const progress = Math.max(0, Math.min(1, (now-startsAt)/(opensAt-startsAt)));
-        flower.style.setProperty('--fill-top', `${(1-progress)*100}%`);
-        flower.querySelector('.countdown-color').style.opacity = progress ? '1' : '0';
-        const remaining = Math.max(0, Math.ceil((opensAt-now)/1000));
-        const hours = Math.floor(remaining/3600), minutes = Math.floor(remaining/60)%60, seconds = remaining%60;
-        const value = [hours,minutes,seconds].map(n=>String(n).padStart(2,'0')).join('');
-        digits.forEach((digit,i)=>{if(digit.textContent!==value[i])digit.textContent=value[i];});
-        document.querySelector('.clock').setAttribute('aria-label',`${hours} giờ ${minutes} phút ${seconds} giây nữa mở quà`);
+        const progress = Math.max(0, Math.min(1, (now - colorStartsAt) / (opensAt - colorStartsAt)));
+        flower.style.setProperty('--fill-top', `${(1 - progress) * 100}%`);
+        if (progress === 0) flower.querySelector('.countdown-color').style.opacity = '0';
+        else flower.querySelector('.countdown-color').style.opacity = '1';
+        const remaining = Math.max(0, Math.ceil((opensAt - now) / 1000));
+        const hours = Math.floor(remaining / 3600);
+        const minutes = Math.floor(remaining / 60) % 60;
+        const seconds = remaining % 60;
+        const value = [hours,minutes,seconds].map(n => String(n).padStart(2,'0')).join('');
+        digits.forEach((digit,i) => {if(digit.textContent !== value[i]) digit.textContent = value[i];});
+        document.querySelector('.clock').setAttribute('aria-label', `${hours} giờ ${minutes} phút ${seconds} giây nữa mở quà`);
+        if (!remaining && preview !== 'countdown') reveal(true);
       }
-      resize();tick();setInterval(tick,250);
-      addEventListener('resize',resize,{passive:true});
-      document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
+
+      resize();
+      window.addEventListener('resize', resize, {passive:true});
+      openButton.addEventListener('click', () => {if (!editing) setOpen(true);});
+      closeButton.addEventListener('click', () => setOpen(false));
+      document.addEventListener('keydown', e => {if(e.key === 'Escape' && card.classList.contains('is-open')) setOpen(false);});
+      if (editing || preview === 'cover' || preview === 'open') reveal(false);
+      else {tick(); if (!revealed) interval = setInterval(tick, 250);}
+      document.addEventListener('visibilitychange', () => {if(!document.hidden && !revealed) tick();});
+
+      const defaults = {title:{x:0,y:0,size:200},date:{x:0,y:0,size:150}};
+      const sanitize = raw => Object.fromEntries(Object.keys(defaults).map(key => [key,{
+        x:Math.max(-600,Math.min(600,Number(raw?.[key]?.x)||0)),
+        y:Math.max(-797,Math.min(797,Number(raw?.[key]?.y)||0)),
+        size:Math.max(60,Math.min(280,Number(raw?.[key]?.size)||defaults[key].size))
+      }]));
+      let layout = structuredClone(defaults);
+      try {layout = sanitize(JSON.parse(document.getElementById('cover-layout').textContent));} catch {}
+      if (editing) {
+        try {const saved=localStorage.getItem('wife-cover-layout-v1');if(saved)layout=sanitize(JSON.parse(saved));}catch{}
+      }
+      function applyLayout() {
+        for (const [key,values] of Object.entries(layout)) {
+          for (const [property,value] of Object.entries(values)) openButton.style.setProperty(`--${key}-${property}`, `${value}px`);
+        }
+        if(editing)try{localStorage.setItem('wife-cover-layout-v1',JSON.stringify(layout));}catch{}
+      }
+      applyLayout();
+      if (editing) {
+        document.body.classList.add('editing-cover');
+        document.querySelector('.hint').textContent='Kéo chữ trên thiệp hoặc chỉnh trong bảng điều khiển';
+        const panel=document.createElement('aside');
+        panel.className='layout-controls';panel.setAttribute('aria-label','Điều chỉnh bìa thiệp');
+        panel.innerHTML='<details open><summary>Chỉnh bìa thiệp</summary><p>Kéo trực tiếp từng dòng chữ. Ngang: trái / phải. Dọc: lên / xuống.</p><div class="layout-fields"></div><div class="layout-actions"><button type="button" class="reset-layout">Đặt lại</button><button type="button" class="export-layout">Tải HTML đã chỉnh</button></div><output aria-live="polite">Tự lưu trên trình duyệt này.</output></details>';
+        document.body.append(panel);
+        const fields=panel.querySelector('.layout-fields');
+        for(const [key,name] of [['title','gửi Vợ'],['date','20’10']]){
+          const fieldset=document.createElement('fieldset');
+          const legend=document.createElement('legend');legend.textContent=name;fieldset.append(legend);
+          for(const [prop,label,min,max] of [['x','Ngang',-600,600],['y','Dọc',-797,797],['size','Cỡ chữ',60,280]]){
+            const row=document.createElement('label');
+            const caption=document.createElement('span');caption.textContent=label;
+            row.append(caption);
+            for(const type of ['number','range']){
+              const input=document.createElement('input');Object.assign(input,{type,min,max,step:'1',value:layout[key][prop]});
+              input.dataset.key=key;input.dataset.prop=prop;input.setAttribute('aria-label',`${name}: ${label}${type==='number'?' (giá trị)':''}`);
+              input.addEventListener('input',()=>{
+                if(input.value==='')return;
+                layout[key][prop]=Math.max(min,Math.min(max,Number(input.value)));applyLayout();syncFields(input);
+              });row.append(input);
+            }
+            fieldset.append(row);
+          }
+          fields.append(fieldset);
+        }
+        function syncFields(active){
+          panel.querySelectorAll('input').forEach(input=>{if(input!==active)input.value=layout[input.dataset.key][input.dataset.prop];});
+        }
+        for(const [key,selector] of [['title','.cover-title'],['date','.cover-date']]){
+          const text=document.querySelector(selector);let drag;
+          text.addEventListener('pointerdown',event=>{
+            if(event.button!==0)return;
+            const scale=openButton.getBoundingClientRect().width/openButton.offsetWidth;
+            drag={x:event.clientX,y:event.clientY,startX:layout[key].x,startY:layout[key].y,scale};
+            text.setPointerCapture(event.pointerId);event.preventDefault();
+          });
+          text.addEventListener('pointermove',event=>{
+            if(!drag)return;
+            layout[key].x=Math.round(Math.max(-600,Math.min(600,drag.startX+(event.clientX-drag.x)/drag.scale)));
+            layout[key].y=Math.round(Math.max(-797,Math.min(797,drag.startY+(event.clientY-drag.y)/drag.scale)));
+            applyLayout();syncFields();
+          });
+          const endDrag=()=>{drag=null;};text.addEventListener('pointerup',endDrag);text.addEventListener('pointercancel',endDrag);text.addEventListener('lostpointercapture',endDrag);
+        }
+        panel.querySelector('.reset-layout').addEventListener('click',()=>{layout=structuredClone(defaults);applyLayout();syncFields();});
+        panel.querySelector('.export-layout').addEventListener('click',()=>{
+          const clone=document.documentElement.cloneNode(true);
+          clone.querySelector('.layout-controls')?.remove();clone.querySelector('body').classList.remove('editing-cover');
+          clone.querySelector('#cover-layout').textContent=JSON.stringify(layout);
+          clone.querySelector('#open-card').setAttribute('aria-expanded','false');
+          clone.querySelector('#open-card').setAttribute('aria-hidden','false');clone.querySelector('#open-card').tabIndex=0;
+          clone.querySelector('#letter').setAttribute('aria-hidden','true');clone.querySelector('#letter').inert=true;
+          clone.querySelector('#photo-page').setAttribute('aria-hidden','true');clone.querySelector('#close-card').hidden=true;
+          clone.querySelector('#announcement').textContent='';
+          clone.querySelector('#countdown').hidden=false;clone.querySelector('#countdown').classList.remove('leaving');
+          clone.querySelector('#card').hidden=true;clone.querySelector('#card').classList.remove('is-open');
+          clone.querySelector('.hint').textContent='Em chạm vào thiệp để mở nhé';
+          const blob=new Blob(['<!doctype html>\n'+clone.outerHTML],{type:'text/html;charset=utf-8'});
+          const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='gui-vo-20-10-da-chinh.html';link.click();
+          setTimeout(()=>URL.revokeObjectURL(url),10000);
+          panel.querySelector('output').textContent='Đã tải bản HTML có vị trí chữ bạn vừa chỉnh.';
+        });
+      }
     })();
   </script>
 </body>
