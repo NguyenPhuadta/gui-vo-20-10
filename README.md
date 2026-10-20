@@ -4,6 +4,6 @@
 
 Xem trước thiết kế: `?preview=cover`, `?preview=open`, `?preview=countdown`.
 
-Bố cục theo Figma `1463:531` và `1463:565`. Ảnh và chữ viết tay bên trái đang giữ theo mẫu mẹ Hiền trong Figma, chờ thay bằng ảnh và lời đề tặng cho vợ.
+Bố cục theo Figma `1463:531` và `1463:565`. Trang trái dùng ảnh vợ và lời đề tặng viết tay: “tặng vợ xinh / một bức ảnh với màu film / do app anh tự làm”.
 
 Chỉnh bìa bằng `?edit=1`: kéo chữ, chỉnh ngang/dọc/cỡ chữ, tự lưu trên trình duyệt. Nút “Tải HTML đã chỉnh” xuất bố cục đã chọn; giữ file HTML cạnh thư mục `assets/` khi dùng.
